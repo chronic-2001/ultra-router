@@ -5,7 +5,8 @@ export = async function setXHeaders(req: Request, res: Response, next: NextFunct
   const config = await import('../config');
   const headers = req.headers;
   headers['x-forwarded-proto'] = config.protocol;
-  headers['x-forwarded-for'] = headers['x-real-ip'] = req.socket.remoteAddress;
+  // strip the ::ffff: prefix of the converted ipv6 address, e.g. ::ffff:127.0.0.1
+  headers['x-forwarded-for'] = headers['x-real-ip'] = req.socket.remoteAddress.replace(/^.*:/, '');
   headers['x-forwarded-host'] = headers['host'] = headers['host'] || config.hostname + ':' + config.port;
 
   if (config.protocol === 'https') {

@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as readline from 'readline';
 import { Request, Response, NextFunction } from 'express';
 import { IncomingMessage, ServerResponse } from 'http';
-import { getUrlPattern, isTextContent, getEncoding } from './utils';
+import { getUrlPattern, isTextContent } from './utils';
 import * as zlib from 'zlib';
 
 const protocol = 'https';
