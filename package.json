@@ -3,12 +3,15 @@
   "version": "1.0.0",
   "description": "",
   "dependencies": {
-    "@types/express": "^4.11.1",
-    "@types/http-proxy": "^1.16.0",
     "express": "^4.16.3",
-    "http-proxy": "^1.16.2"
+    "lodash": "^4.17.10",
+    "spdy": "^3.4.7"
   },
   "devDependencies": {
+    "@types/express": "^4.11.1",
+    "@types/lodash": "^4.14.110",
+    "@types/node": "^9.4.0",
+    "@types/spdy": "^3.4.4",
     "rimraf": "^2.6.2",
     "typescript": "^2.7.1"
   },

@@ -1,11 +1,22 @@
 import * as express from 'express';
-import * as httpProxy from 'http-proxy';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as spdy from 'spdy';
+import { parse } from 'url';
+import proxy from './proxy';
 
-const app = express();
-app.get('/test', (req, res) => res.send('hello'));
-app.listen(3001);
+(async function start() {
+  const config = await import('./config');
+  const app = express();
 
-const server = express();
-const proxy = httpProxy.createProxy();
-server.all('/test', (req, res) => proxy.web(req, res, {target: 'http://localhost:3001'}));
-server.listen(3000);
+  const filterDir = path.join(__dirname, 'filters');
+  fs.readdirSync(filterDir).filter(file => file.endsWith('.js')).sort().forEach(file => {
+    app.use(require(path.join(filterDir, file)));
+  });
+
+  config.routes.forEach(conf => {
+    app.use(conf.path, proxy(conf.options));
+  });
+
+  (config.protocol === 'https' ? spdy.createServer(config.https, app) : app).listen(config.port);
+})();
