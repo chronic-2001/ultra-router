@@ -100,6 +100,7 @@ export = (async function resolveConfig() {
                   if (zipped) {
                     buffer = zlib.gzipSync(buffer);
                   }
+                  res.removeHeader('content-length');
                   res.end(buffer);
                   resolve();
                 });

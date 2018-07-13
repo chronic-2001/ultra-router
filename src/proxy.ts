@@ -20,7 +20,7 @@ export default function proxy({ target, timeout, filters = [], onRequest = noop,
     options.method = req.method;
     options.headers = clone(req.headers);
 
-    const proxyReq = (options.protocol === 'https' ? https : http)(options);
+    const proxyReq = (options.protocol === 'https:' ? https : http)(options);
 
     if (timeout) {
       proxyReq.setTimeout(timeout, () => proxyReq.abort());
