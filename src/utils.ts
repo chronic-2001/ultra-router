@@ -1,4 +1,5 @@
 import { escapeRegExp } from 'lodash';
+import * as zlib from 'zlib';
 
 export function getUrlPattern(url: string) {
   url = escapeRegExp(url);
@@ -16,4 +17,8 @@ export function isTextContent(contentType: string) {
 
 export function getEncoding(contentType: string) {
   return (contentType.match(/charset\s*=\s*([\w-]+)\b/) || [])[1] || 'utf8';
+}
+
+export function zipWrapper(process: (input: string) => string) {
+  return (input: string) => zlib.gzipSync(process(zlib.gunzipSync(input).toString())).toString();
 }

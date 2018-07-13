@@ -10,7 +10,7 @@ import proxy from './proxy';
   const app = express();
 
   const filterDir = path.join(__dirname, 'filters');
-  fs.readdirSync(filterDir).filter(file => file.endsWith('.js')).sort().forEach(file => {
+  fs.readdirSync(filterDir).filter(file => /^\d+.*.js$/.test(file)).sort().forEach(file => {
     app.use(require(path.join(filterDir, file)));
   });
 
@@ -18,5 +18,5 @@ import proxy from './proxy';
     app.use(conf.path, proxy(conf.options));
   });
 
-  (config.protocol === 'https' ? spdy.createServer(config.https, app) : app).listen(config.port);
+  (config.protocol === 'https' ? spdy.createServer(config.https, app) : app).listen(config.port).setTimeout(config.timeout);
 })();

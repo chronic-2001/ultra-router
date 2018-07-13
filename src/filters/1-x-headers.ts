@@ -12,5 +12,6 @@ export = async function setXHeaders(req: Request, res: Response, next: NextFunct
   if (config.protocol === 'https') {
     headers['x-blackboard-requestid'] = crypto.randomBytes(16).toString('hex');
   }
+
   next();
 }

@@ -6,12 +6,13 @@ import { parse } from 'url';
 
 interface IOptions {
   target: string;
+  timeout?: number; // timeout for this proxy in ms
   filters?: RequestHandler[];
   onRequest?: (proxyReq: ClientRequest, req: IncomingMessage) => void;
   onResponse?: (proxyRes: IncomingMessage, res: ServerResponse) => void;
 }
 
-export default function proxy({ target, filters = [], onRequest = noop, onResponse }: IOptions) {
+export default function proxy({ target, timeout, filters = [], onRequest = noop, onResponse = noop }: IOptions) {
   return [...filters, (req: Request, res: Response) => {
     const targetUrl = parse(target);
     const options: RequestOptions = pick(targetUrl, ['protocol', 'hostname', 'port']);
@@ -21,6 +22,9 @@ export default function proxy({ target, filters = [], onRequest = noop, onRespon
 
     const proxyReq = (options.protocol === 'https' ? https : http)(options);
 
+    if (timeout) {
+      proxyReq.setTimeout(timeout, () => proxyReq.abort());
+    }
     // Ensure we abort proxy if request is aborted
     req.on('aborted', function () {
       proxyReq.abort();
@@ -32,18 +36,15 @@ export default function proxy({ target, filters = [], onRequest = noop, onRespon
 
     req.pipe(proxyReq);
 
-    proxyReq.on('response', proxyRes => {
+    proxyReq.on('response', async proxyRes => {
       forEach(proxyRes.headers, (value, key) => {
         res.setHeader(key, value);
       });
       res.statusCode = proxyRes.statusCode;
       res.statusMessage = proxyRes.statusMessage;
 
-      if (onResponse) {
-        onResponse(proxyRes, res);
-      } else {
-        proxyRes.pipe(res);
-      }
+      await onResponse(proxyRes, res);
+      proxyRes.pipe(res);
     });
   }];
 }

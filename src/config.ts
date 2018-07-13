@@ -42,6 +42,7 @@ export = (async function resolveConfig() {
       key: fs.readFileSync(path.join(CERT_DIR, 'star.int.bbpd.io.key')),
       cert: fs.readFileSync(path.join(CERT_DIR, 'star.int.bbpd.io.crt')),
     },
+    timeout: 120000, // ms
     routes: [
       {
         // Ultra UI
@@ -84,24 +85,25 @@ export = (async function resolveConfig() {
 
             const contentType = proxyRes.headers["content-type"];
             if (isTextContent(contentType)) {
-              const chunks: Buffer[] = [];
-              proxyRes.on('data', (chunk: Buffer) => {
-                chunks.push(chunk);
+              return new Promise<void>(resolve => {
+                const chunks: Buffer[] = [];
+                proxyRes.on('data', (chunk: Buffer) => {
+                  chunks.push(chunk);
+                });
+                proxyRes.on('end', () => {
+                  let buffer = Buffer.concat(chunks);
+                  const zipped = proxyRes.headers["content-encoding"] === 'gzip';
+                  if (zipped) {
+                    buffer = zlib.gunzipSync(buffer);
+                  }
+                  buffer = Buffer.from(buffer.toString().replace(urlPattern, routerUrl));
+                  if (zipped) {
+                    buffer = zlib.gzipSync(buffer);
+                  }
+                  res.end(buffer);
+                  resolve();
+                });
               });
-              proxyRes.on('end', () => {
-                let buffer = Buffer.concat(chunks);
-                const zipped = proxyRes.headers["content-encoding"] === 'gzip';
-                if (zipped) {
-                  buffer = zlib.gunzipSync(buffer);
-                }
-                buffer = Buffer.from(buffer.toString().replace(urlPattern, routerUrl));
-                if (zipped) {
-                  buffer = zlib.gzipSync(buffer);
-                }
-                res.end(buffer);
-              });
-            } else {
-              proxyRes.pipe(res);
             }
           }
         }
