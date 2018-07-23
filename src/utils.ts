@@ -12,7 +12,7 @@ export function getUrlPattern(url: string) {
 }
 
 export function isTextContent(contentType: string) {
-  return /^text\/|application\/(html|xml|javascript|json)/.test(contentType);
+  return /^text\/|application\/(html|xml|(x-)?javascript|json)/.test(contentType);
 }
 
 export function getEncoding(contentType: string) {
