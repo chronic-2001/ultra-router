@@ -36,6 +36,10 @@ export default function proxy({ target, timeout, filters = [], onRequest = noop,
 
     req.pipe(proxyReq);
 
+    proxyReq.on('error', e => {
+      res.status(500).send(e.message);
+    });
+
     proxyReq.on('response', async proxyRes => {
       forEach(proxyRes.headers, (value, key) => {
         res.setHeader(key, value);
