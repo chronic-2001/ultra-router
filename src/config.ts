@@ -70,8 +70,6 @@ export = (async function resolveConfig() {
               req.originalUrl = req.originalUrl.replace(escape(routerUrl), escape(frontendUrl));
             }
 
-            req.headers['accept-encoding'] = 'gzip';
-            req.headers['accept-charset'] = 'utf-8';
             next();
           }],
           onResponse: (proxyRes: IncomingMessage, res: ServerResponse) => {
