@@ -30,9 +30,45 @@ export = (async function resolveConfig() {
     rl.on('close', () => resolve(config));
   });
 
-  const frontendUrl = learnConfig['bbconfig.frontend.protocol'] + '://'
+  const learnUrl = learnConfig['bbconfig.frontend.protocol'] + '://'
     + learnConfig['bbconfig.frontend.fullhostname'] + ':' + learnConfig['bbconfig.frontend.portnumber'];
   const routerUrl = protocol + '://' + hostname + ':' + port;
+
+  function filterResponse(proxyRes: IncomingMessage, res: ServerResponse) {
+    const urlPattern = getUrlPattern(learnUrl);
+    ['location', 'content-location'].forEach(name => {
+      const location: string = <string>proxyRes.headers[name];
+      if (location) {
+        res.setHeader(name, location.replace(urlPattern, routerUrl));
+      }
+    });
+
+    const contentType = proxyRes.headers['content-type'];
+    if (isTextContent(contentType)) {
+      return new Promise<void>(resolve => {
+        const chunks: Buffer[] = [];
+        proxyRes.on('data', (chunk: Buffer) => {
+          chunks.push(chunk);
+        });
+        proxyRes.on('end', () => {
+          let buffer = Buffer.concat(chunks);
+          const zipped = proxyRes.headers['content-encoding'] === 'gzip';
+          if (zipped) {
+            buffer = zlib.gunzipSync(buffer);
+          }
+          buffer = Buffer.from(buffer
+              .toString()
+              .replace(urlPattern, routerUrl));
+          if (zipped) {
+            buffer = zlib.gzipSync(buffer);
+          }
+          res.removeHeader('content-length');
+          res.end(buffer);
+          resolve();
+        });
+      });
+    }
+  }
 
   return {
     protocol,
@@ -48,7 +84,8 @@ export = (async function resolveConfig() {
         // Ultra UI
         path: '/ultra',
         options: {
-          target: `http://${hostname}:9900`
+          target: `http://${hostname}:9900`,
+          onResponse: filterResponse
         }
       },
       {
@@ -62,54 +99,22 @@ export = (async function resolveConfig() {
         // Learn, this one must come last because it intercepts all requests
         path: '/',
         options: {
-          target: `http://${hostname}:8081`,
+          target: learnUrl,
           filters: [(req: Request, res: Response, next: NextFunction) => {
             if (req.originalUrl.startsWith('/webapps/privacy-disclosure/execute/consent')) {
               // "/" is not escaped in the original url
               const escape = (url: string) => encodeURIComponent(url).replace(/%2F/g, '/');
-              req.originalUrl = req.originalUrl.replace(escape(routerUrl), escape(frontendUrl));
+              req.originalUrl = req.originalUrl.replace(escape(routerUrl), escape(learnUrl));
             }
 
             next();
           }],
-          onResponse: (proxyRes: IncomingMessage, res: ServerResponse) => {
-            const urlPattern = getUrlPattern(frontendUrl);
-            ['location', 'content-location'].forEach(name => {
-              const location: string = <string>proxyRes.headers[name];
-              if (location) {
-                res.setHeader(name, location.replace(urlPattern, routerUrl));
-              }
-            });
-
-            const contentType = proxyRes.headers["content-type"];
-            if (isTextContent(contentType)) {
-              return new Promise<void>(resolve => {
-                const chunks: Buffer[] = [];
-                proxyRes.on('data', (chunk: Buffer) => {
-                  chunks.push(chunk);
-                });
-                proxyRes.on('end', () => {
-                  let buffer = Buffer.concat(chunks);
-                  const zipped = proxyRes.headers["content-encoding"] === 'gzip';
-                  if (zipped) {
-                    buffer = zlib.gunzipSync(buffer);
-                  }
-                  buffer = Buffer.from(buffer.toString().replace(urlPattern, routerUrl));
-                  if (zipped) {
-                    buffer = zlib.gzipSync(buffer);
-                  }
-                  res.removeHeader('content-length');
-                  res.end(buffer);
-                  resolve();
-                });
-              });
-            }
-          }
+          onResponse: filterResponse
         }
       },
     ],
     learnConfig,
-    frontendUrl,
+    learnUrl,
     routerUrl,
   };
 })();
