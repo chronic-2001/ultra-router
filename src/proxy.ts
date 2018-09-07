@@ -26,7 +26,7 @@ export default function proxy({ target, timeout, filters = [], onRequest = noop,
       proxyReq.setTimeout(timeout, () => proxyReq.abort());
     }
     // Ensure we abort proxy if request is aborted
-    req.on('aborted', function () {
+    req.on('aborted', () => {
       proxyReq.abort();
     });
 

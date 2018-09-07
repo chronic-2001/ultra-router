@@ -14,7 +14,7 @@ export = async function setXHeaders(req: Request, res: Response, next: NextFunct
   headers['x-forwarded-host'] = config.hostname + ':' + config.port;
 
   const url = parse(config.learnUrl)
-  headers['host'] = url.host;
+  headers.host = url.host;
 
   if (url.protocol === 'https:') {
     headers['x-blackboard-requestid'] = crypto.randomBytes(16).toString('hex');

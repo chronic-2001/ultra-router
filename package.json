@@ -19,6 +19,8 @@
   },
   "scripts": {
     "clean": "rimraf dist",
+    "lint": "tslint -t stylish --project \"tsconfig.json\"",
+    "postclean": "npm run lint",
     "prebuild": "npm run clean",
     "build": "tsc",
     "prestart": "npm run build",

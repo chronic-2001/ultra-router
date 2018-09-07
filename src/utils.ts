@@ -3,11 +3,11 @@ import * as zlib from 'zlib';
 
 export function getUrlPattern(url: string) {
   url = escapeRegExp(url);
-  return new RegExp(url.replace(/(https?):\/\/.*:(\d+)/, (url, scheme, port) => {
+  return new RegExp(url.replace(/(https?):\/\/.*:(\d+)/, (match, scheme, port) => {
     if (scheme === 'http' && port === '80' || scheme === 'https' && port === '443') {
-      url = url.replace(new RegExp(':' + port), '($&)?');
+      match = match.replace(new RegExp(':' + port), '($&)?');
     }
-    return url;
+    return match;
   }), 'g');
 }
 

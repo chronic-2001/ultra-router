@@ -37,7 +37,7 @@ export = (async function resolveConfig() {
   function filterResponse(proxyRes: IncomingMessage, res: ServerResponse) {
     const urlPattern = getUrlPattern(learnUrl);
     ['location', 'content-location'].forEach(name => {
-      const location: string = <string>proxyRes.headers[name];
+      const location: string = proxyRes.headers[name] as string;
       if (location) {
         res.setHeader(name, location.replace(urlPattern, routerUrl));
       }
