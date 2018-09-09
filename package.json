@@ -19,9 +19,8 @@
   },
   "scripts": {
     "clean": "rimraf dist",
-    "lint": "tslint -t stylish --project \"tsconfig.json\"",
-    "postclean": "npm run lint",
-    "prebuild": "npm run clean",
+    "lint": "tslint -t stylish -p tsconfig.json",
+    "prebuild": "npm run clean && npm run lint",
     "build": "tsc",
     "prestart": "npm run build",
     "start": "node dist/server"
