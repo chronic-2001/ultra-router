@@ -13,8 +13,12 @@ export = async function setXHeaders(req: Request, res: Response, next: NextFunct
   headers['x-forwarded-for'] = headers['x-real-ip'] = req.socket.remoteAddress.replace(/^.*:/, '');
   headers['x-forwarded-host'] = config.hostname + ':' + config.port;
 
-  const url = parse(config.learnUrl)
+  const url = parse(config.learnUrl);
   headers.host = url.host;
+  // set the origin header to learn url if exists since it's checked by learn backend for same origin
+  if (headers.origin) {
+    headers.origin = url.href;
+  }
 
   if (url.protocol === 'https:') {
     headers['x-blackboard-requestid'] = crypto.randomBytes(16).toString('hex');
