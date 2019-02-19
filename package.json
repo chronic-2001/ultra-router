@@ -12,7 +12,7 @@
     "@types/express": "^4.11.1",
     "@types/forever-monitor": "^1.7.3",
     "@types/lodash": "^4.14.110",
-    "@types/node": "^9.4.0",
+    "@types/node": "^8.10.40",
     "@types/spdy": "^3.4.4",
     "rimraf": "^2.6.2",
     "tslint": "^5.11.0",
